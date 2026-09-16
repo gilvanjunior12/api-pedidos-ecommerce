@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Pedidos.Api.Endpoints;
 using Pedidos.Api.Exceptions;
+using Pedidos.Api.Swagger;
 using Pedidos.Infrastructure;
 using Pedidos.Infrastructure.Persistence;
 using Serilog;
@@ -43,6 +44,7 @@ try
             Version = "v1",
             Description = "API REST de pedidos de e-commerce"
         });
+        options.SchemaFilter<EnumSchemaFilter>();
     });
 
     var app = builder.Build();

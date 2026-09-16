@@ -1,0 +1,15 @@
+**/.git
+**/.vs
+**/bin
+**/obj
+**/TestResults
+**/logs
+**/*.user
+**/*.md
+Docs/
+.env
+.env.*
+!.env.example
+docker-compose.override.yml
+**/agent-transcripts
+**/.cursor

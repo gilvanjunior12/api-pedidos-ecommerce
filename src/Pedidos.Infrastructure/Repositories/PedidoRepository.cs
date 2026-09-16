@@ -44,7 +44,20 @@ public class PedidoRepository : IPedidoRepository
 
     public async Task AtualizarAsync(Pedido pedido, CancellationToken cancellationToken = default)
     {
-        _context.Pedidos.Update(pedido);
+        var idsAtuais = pedido.Itens.Select(i => i.Id).ToHashSet();
+        var itensNoBanco = await _context.Set<ItemPedido>()
+            .Where(i => i.PedidoId == pedido.Id)
+            .ToListAsync(cancellationToken);
+
+        foreach (var antigo in itensNoBanco.Where(i => !idsAtuais.Contains(i.Id)))
+            _context.Set<ItemPedido>().Remove(antigo);
+
+        foreach (var item in pedido.Itens)
+        {
+            if (_context.Entry(item).State == EntityState.Detached)
+                await _context.Set<ItemPedido>().AddAsync(item, cancellationToken);
+        }
+
         await _context.SaveChangesAsync(cancellationToken);
     }
 }
