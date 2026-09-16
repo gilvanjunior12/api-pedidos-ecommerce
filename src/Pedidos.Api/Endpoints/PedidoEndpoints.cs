@@ -14,6 +14,7 @@ public static class PedidoEndpoints
         group.MapGet("/", ListarAsync);
         group.MapGet("/{id:guid}", ObterPorIdAsync);
         group.MapPut("/{id:guid}", AtualizarAsync);
+        // Cancelar muda o status — não apaga o pedido do banco
         group.MapPost("/{id:guid}/cancelar", CancelarAsync);
         group.MapPost("/{id:guid}/processar", ProcessarAsync);
         group.MapPost("/{id:guid}/enviar", EnviarAsync);

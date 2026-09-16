@@ -6,6 +6,7 @@ namespace Pedidos.Infrastructure.Persistence;
 
 public static class DataSeeder
 {
+    // IDs fixos pra facilitar teste no Swagger / demo
     public static readonly Guid UsuarioDemoId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     public static readonly Guid ProdutoNotebookId = Guid.Parse("22222222-2222-2222-2222-222222222201");
     public static readonly Guid ProdutoMouseId = Guid.Parse("22222222-2222-2222-2222-222222222202");

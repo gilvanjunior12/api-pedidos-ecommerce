@@ -83,6 +83,7 @@ finally
 
 static void CarregarEnv()
 {
+    // Procura .env na raiz do repo — funciona rodando pela Api ou pela solution
     var candidatos = new[]
     {
         Path.Combine(Directory.GetCurrentDirectory(), ".env"),

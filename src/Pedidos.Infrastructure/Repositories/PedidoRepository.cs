@@ -44,6 +44,7 @@ public class PedidoRepository : IPedidoRepository
 
     public async Task AtualizarAsync(Pedido pedido, CancellationToken cancellationToken = default)
     {
+        // Clear() na lista do domínio não avisa o EF — sincroniza na mão o que saiu/entrou
         var idsAtuais = pedido.Itens.Select(i => i.Id).ToHashSet();
         var itensNoBanco = await _context.Set<ItemPedido>()
             .Where(i => i.PedidoId == pedido.Id)
