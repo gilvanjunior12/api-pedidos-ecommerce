@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using Pedidos.Api.Endpoints;
 using Pedidos.Api.Exceptions;
 using Pedidos.Infrastructure;
@@ -18,9 +19,29 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<PedidosDbContext>("database");
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Pedidos API",
+        Version = "v1",
+        Description = "API REST de pedidos de e-commerce"
+    });
+});
+
 var app = builder.Build();
 
 app.UseExceptionHandler();
+
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Pedidos API v1");
+});
 
 using (var scope = app.Services.CreateScope())
 {
@@ -29,6 +50,7 @@ using (var scope = app.Services.CreateScope())
     await DataSeeder.SeedAsync(db);
 }
 
+app.MapHealthChecks("/health");
 app.MapPedidoEndpoints();
 
 app.Run();

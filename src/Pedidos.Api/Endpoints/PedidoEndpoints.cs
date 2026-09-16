@@ -1,5 +1,6 @@
 using Pedidos.Application.DTOs;
 using Pedidos.Application.Interfaces;
+using Pedidos.Domain.Enums;
 
 namespace Pedidos.Api.Endpoints;
 
@@ -7,7 +8,7 @@ public static class PedidoEndpoints
 {
     public static void MapPedidoEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/pedidos");
+        var group = app.MapGroup("/api/v1/pedidos").WithTags("Pedidos");
 
         group.MapPost("/", CriarAsync);
         group.MapGet("/", ListarAsync);
@@ -24,14 +25,16 @@ public static class PedidoEndpoints
         CancellationToken cancellationToken)
     {
         var pedido = await service.CriarAsync(dto, cancellationToken);
-        return Results.Created($"/pedidos/{pedido.Id}", pedido);
+        return Results.Created($"/api/v1/pedidos/{pedido.Id}", pedido);
     }
 
     private static async Task<IResult> ListarAsync(
+        StatusPedido? status,
         IPedidoService service,
         CancellationToken cancellationToken)
     {
-        var pedidos = await service.ListarAsync(cancellationToken: cancellationToken);
+        var filtro = status.HasValue ? new PedidoFiltroDto { Status = status } : null;
+        var pedidos = await service.ListarAsync(filtro, cancellationToken);
         return Results.Ok(pedidos);
     }
 
