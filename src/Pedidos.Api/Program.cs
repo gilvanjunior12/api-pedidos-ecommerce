@@ -5,55 +5,79 @@ using Pedidos.Api.Endpoints;
 using Pedidos.Api.Exceptions;
 using Pedidos.Infrastructure;
 using Pedidos.Infrastructure.Persistence;
+using Serilog;
 
 CarregarEnv();
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
-builder.Services.ConfigureHttpJsonOptions(options =>
+try
 {
-    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
-});
+    var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddProblemDetails();
-builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Host.UseSerilog((context, services, configuration) => configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext());
 
-builder.Services.AddHealthChecks()
-    .AddDbContextCheck<PedidosDbContext>("database");
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new OpenApiInfo
+    builder.Services.ConfigureHttpJsonOptions(options =>
     {
-        Title = "Pedidos API",
-        Version = "v1",
-        Description = "API REST de pedidos de e-commerce"
+        options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
-});
 
-var app = builder.Build();
+    builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+    builder.Services.AddProblemDetails();
+    builder.Services.AddInfrastructure(builder.Configuration);
 
-app.UseExceptionHandler();
+    builder.Services.AddHealthChecks()
+        .AddDbContextCheck<PedidosDbContext>("database");
 
-app.UseSwagger();
-app.UseSwaggerUI(options =>
-{
-    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Pedidos API v1");
-});
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(options =>
+    {
+        options.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Title = "Pedidos API",
+            Version = "v1",
+            Description = "API REST de pedidos de e-commerce"
+        });
+    });
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<PedidosDbContext>();
-    await db.Database.MigrateAsync();
-    await DataSeeder.SeedAsync(db);
+    var app = builder.Build();
+
+    app.UseSerilogRequestLogging();
+    app.UseExceptionHandler();
+
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Pedidos API v1");
+    });
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<PedidosDbContext>();
+        await db.Database.MigrateAsync();
+        await DataSeeder.SeedAsync(db);
+    }
+
+    app.MapHealthChecks("/health");
+    app.MapPedidoEndpoints();
+
+    Log.Information("API de pedidos iniciada");
+    app.Run();
 }
-
-app.MapHealthChecks("/health");
-app.MapPedidoEndpoints();
-
-app.Run();
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Falha ao iniciar a API");
+    throw;
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
 static void CarregarEnv()
 {
