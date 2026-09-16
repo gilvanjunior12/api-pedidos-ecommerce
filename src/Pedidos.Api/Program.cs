@@ -7,6 +7,7 @@ using Pedidos.Api.Swagger;
 using Pedidos.Infrastructure;
 using Pedidos.Infrastructure.Persistence;
 using Serilog;
+using Serilog.Events;
 
 CarregarEnv();
 
@@ -49,7 +50,25 @@ try
 
     var app = builder.Build();
 
-    app.UseSerilogRequestLogging();
+    app.UseSerilogRequestLogging(options =>
+    {
+        options.GetLevel = (httpContext, _, exception) =>
+        {
+            var path = httpContext.Request.Path.Value ?? string.Empty;
+
+            // Swagger, health e estáticos: não poluem o arquivo em Information
+            if (EhRuidoDeRequest(path))
+                return LogEventLevel.Verbose;
+
+            if (exception is not null || httpContext.Response.StatusCode >= 500)
+                return LogEventLevel.Error;
+
+            if (httpContext.Response.StatusCode >= 400)
+                return LogEventLevel.Warning;
+
+            return LogEventLevel.Information;
+        };
+    });
     app.UseExceptionHandler();
 
     app.UseSwagger();
@@ -81,9 +100,26 @@ finally
     Log.CloseAndFlush();
 }
 
+static bool EhRuidoDeRequest(string path)
+{
+    if (string.IsNullOrEmpty(path))
+        return false;
+
+    if (path.StartsWith("/swagger", StringComparison.OrdinalIgnoreCase)
+        || path.StartsWith("/health", StringComparison.OrdinalIgnoreCase)
+        || path.Equals("/favicon.ico", StringComparison.OrdinalIgnoreCase))
+        return true;
+
+    return path.EndsWith(".css", StringComparison.OrdinalIgnoreCase)
+        || path.EndsWith(".js", StringComparison.OrdinalIgnoreCase)
+        || path.EndsWith(".map", StringComparison.OrdinalIgnoreCase)
+        || path.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+        || path.EndsWith(".ico", StringComparison.OrdinalIgnoreCase);
+}
+
 static void CarregarEnv()
 {
-    // Procura .env na raiz do repo — funciona rodando pela Api ou pela solution
+    // Procura .env na raiz do repo (funciona rodando pela Api ou pela solution)
     var candidatos = new[]
     {
         Path.Combine(Directory.GetCurrentDirectory(), ".env"),
