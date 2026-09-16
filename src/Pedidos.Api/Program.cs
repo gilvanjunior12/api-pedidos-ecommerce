@@ -1,4 +1,7 @@
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
+using Pedidos.Api.Endpoints;
+using Pedidos.Api.Exceptions;
 using Pedidos.Infrastructure;
 using Pedidos.Infrastructure.Persistence;
 
@@ -6,9 +9,18 @@ CarregarEnv();
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 using (var scope = app.Services.CreateScope())
 {
@@ -17,7 +29,7 @@ using (var scope = app.Services.CreateScope())
     await DataSeeder.SeedAsync(db);
 }
 
-app.MapGet("/", () => "Hello World!");
+app.MapPedidoEndpoints();
 
 app.Run();
 

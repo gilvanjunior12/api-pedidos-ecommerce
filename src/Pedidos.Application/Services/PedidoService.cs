@@ -25,7 +25,7 @@ public class PedidoService : IPedidoService
     public async Task<PedidoDto> CriarAsync(CriarPedidoDto dto, CancellationToken cancellationToken = default)
     {
         var comprador = await _usuarios.ObterPorIdAsync(dto.CompradorId, cancellationToken)
-            ?? throw new DomainException("Comprador não encontrado.");
+            ?? throw new NotFoundException("Comprador não encontrado.");
 
         var itens = await MontarItensAsync(dto.Itens, cancellationToken);
         var pedido = Pedido.Criar(comprador, itens);
@@ -85,7 +85,7 @@ public class PedidoService : IPedidoService
     private async Task<Pedido> ObterPedidoAsync(Guid id, CancellationToken cancellationToken)
     {
         return await _pedidos.ObterPorIdAsync(id, cancellationToken)
-            ?? throw new DomainException("Pedido não encontrado.");
+            ?? throw new NotFoundException("Pedido não encontrado.");
     }
 
     private async Task<List<ItemPedido>> MontarItensAsync(List<ItemPedidoInputDto> itensDto, CancellationToken cancellationToken)
@@ -101,7 +101,7 @@ public class PedidoService : IPedidoService
         foreach (var itemDto in itensDto)
         {
             if (!mapa.TryGetValue(itemDto.ProdutoId, out var produto))
-                throw new DomainException($"Produto {itemDto.ProdutoId} não encontrado.");
+                throw new NotFoundException($"Produto {itemDto.ProdutoId} não encontrado.");
 
             itens.Add(new ItemPedido(produto, itemDto.Quantidade));
         }
