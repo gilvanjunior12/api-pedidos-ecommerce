@@ -12,7 +12,7 @@ public class Produto
     {
     }
 
-    public Produto(string nome, decimal preco)
+    public Produto(string nome, decimal preco, Guid? id = null)
     {
         if (string.IsNullOrWhiteSpace(nome))
             throw new DomainException("Nome do produto é obrigatório.");
@@ -20,7 +20,7 @@ public class Produto
         if (preco <= 0)
             throw new DomainException("Preço do produto deve ser maior que zero.");
 
-        Id = Guid.NewGuid();
+        Id = id ?? Guid.NewGuid();
         Nome = nome.Trim();
         Preco = preco;
     }

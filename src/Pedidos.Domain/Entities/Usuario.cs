@@ -12,7 +12,7 @@ public class Usuario
     {
     }
 
-    public Usuario(string nome, string email)
+    public Usuario(string nome, string email, Guid? id = null)
     {
         if (string.IsNullOrWhiteSpace(nome))
             throw new DomainException("Nome do usuário é obrigatório.");
@@ -20,7 +20,7 @@ public class Usuario
         if (string.IsNullOrWhiteSpace(email))
             throw new DomainException("Email do usuário é obrigatório.");
 
-        Id = Guid.NewGuid();
+        Id = id ?? Guid.NewGuid();
         Nome = nome.Trim();
         Email = email.Trim();
     }
