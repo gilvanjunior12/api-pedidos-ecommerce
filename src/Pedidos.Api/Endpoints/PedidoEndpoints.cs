@@ -8,16 +8,18 @@ public static class PedidoEndpoints
 {
     public static void MapPedidoEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/v1/pedidos").WithTags("Pedidos");
+        var pedidos = app.MapGroup("/api/v1/pedidos").WithTags("Pedidos");
+        var fluxo = app.MapGroup("/api/v1/pedidos").WithTags("Fluxo");
 
-        group.MapPost("/", CriarAsync);
-        group.MapGet("/", ListarAsync);
-        group.MapGet("/{id:guid}", ObterPorIdAsync);
-        group.MapPut("/{id:guid}", AtualizarAsync);
-        // Cancelar muda o status — não apaga o pedido do banco
-        group.MapPost("/{id:guid}/cancelar", CancelarAsync);
-        group.MapPost("/{id:guid}/processar", ProcessarAsync);
-        group.MapPost("/{id:guid}/enviar", EnviarAsync);
+        pedidos.MapPost("/", CriarAsync);
+        pedidos.MapGet("/", ListarAsync);
+        pedidos.MapGet("/{id:guid}", ObterPorIdAsync);
+        pedidos.MapPut("/{id:guid}", AtualizarAsync);
+
+        // Cancelar muda o status (não apaga o pedido do banco)
+        fluxo.MapPost("/{id:guid}/cancelar", CancelarAsync);
+        fluxo.MapPost("/{id:guid}/processar", ProcessarAsync);
+        fluxo.MapPost("/{id:guid}/enviar", EnviarAsync);
     }
 
     private static async Task<IResult> CriarAsync(
