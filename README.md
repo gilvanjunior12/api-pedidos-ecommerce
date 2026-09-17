@@ -25,7 +25,7 @@ cp .env.example .env
 
 ---
 
-## Como rodar com Docker
+## Como rodar com Docker (Recomendado)
 
 Sobe a API e o SQL Server juntos:
 
